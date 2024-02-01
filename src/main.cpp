@@ -1,25 +1,15 @@
-#include <raylib.h>
-#include <unistd.h>
+#include <vector>
 #include "render.hpp"
-#include "sphere.hpp"
+#include "objects.hpp"
 
 
 int main () {
-    float ratio = 16.0 / 9.0;
-    float height = 1000;
-    float width = ratio * height;
+    const std::vector<Sphere> spheres = {
+        {{-3, 0, -16},          2,      Color(102, 102, 77, 255)},
+        {{-1, -1.5, -12},       2,      Color(77, 26, 26, 255)},
+        {{1.5, -0.5, -18},      2,      Color(77, 26, 26, 255)},
+        {{7, 5, -18},           2,      Color(102, 102, 77, 255)},
+    };
 
-    InitWindow(width, height, "");
-    SetTargetFPS(60);
-
-    const Sphere sphere = {{0, 0, -16}, 2, Color(255, 0, 0, 255)};
-
-    while (!WindowShouldClose()) {
-        BeginDrawing();
-            ClearBackground(BLACK);
-            render(sphere);
-        EndDrawing();
-    }
-
-    return 0;
+    render(spheres);
 }

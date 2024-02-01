@@ -1,5 +1,6 @@
 #pragma once
 
-#include "sphere.hpp"
+#include <vector>
+#include "objects.hpp"
 
-void render(const Sphere& sphere);
+void render(const std::vector<Sphere>& spheres);
