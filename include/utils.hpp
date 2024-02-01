@@ -4,25 +4,27 @@
 #include <raylib.h>
 #include <iostream>
 #include <math.h>
-#include "objects.hpp"
 
 
-inline Vector2 operator + (const Vector2& v1, const Vector2& v2) {
-    return { v1.x + v2.x, v1.y + v2.y };
+////// VECTOR OPERATOR OVERLOADING //////
+inline Vector3 operator + (const Vector3& v1, const Vector3& v2) {
+    return { v1.x + v2.x, v1.y + v2.y, v1.z + v2.z };
 }
 
-inline Vector2 operator - (const Vector2& v1, const Vector2& v2) {
-    return { v1.x - v2.x, v1.y - v2.y };
+inline Vector3 operator - (const Vector3& v1, const Vector3& v2) {
+    return { v1.x - v2.x, v1.y - v2.y, v1.z - v2.z };
 }
 
-inline Vector2 operator -= (const Vector2& v1, const Vector2& v2) {
-    return { v1.x - v2.x, v1.y - v2.y };
+inline Vector3 operator * (const Vector3& v1, const float& f) {
+    return { v1.x * f, v1.y * f, v1.z * f };
 }
 
-inline Vector2 operator / (const Vector2& v1, float f) {
-    return { v1.x / f, v1.y / f };
+inline Vector3 operator / (const Vector3& v1, const float& f) {
+    return { v1.x / f, v1.y / f, v1.z / f };
 }
 
+
+////// DEBUG UTILS //////
 template <typename T>
 inline void DEB(T m) {
     std::cout << m << "\n";
@@ -32,36 +34,26 @@ inline void DEB(const Vector2& m) {
     std::cout << m.x << " " << m.y << "\n";
 }
 
+////// NAMESPACE UTILS //////
 namespace utils {
 
-inline float length(const Vector2& v) {
-    return std::sqrt(v.x * v.x + v.y * v.y);
-}
+    inline float dot(const Vector3& v1, const Vector3& v2) {
+        return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+    }
 
-inline float distance(const Vector2& v1, const Vector2& v2) {
-    return std::sqrt(
-        (v1.x - v2.x) * (v1.x - v2.x) + 
-        (v1.y - v2.y) * (v1.y - v2.y)
-    );
-}
+    inline float length(const Vector3& v) {
+        return std::sqrt(utils::dot(v, v));
+    }
 
-inline Vector2 abs(const Vector2& v) {
-    return {
-        std::abs(v.x),
-        std::abs(v.y)
-    };
-}
+    inline Vector3 project_onto_ray(const Ray& ray, const Vector3& point) {
+        Vector3 line_vector = ray.direction - ray.position;
+        float line_length_squared = utils::dot(line_vector, line_vector);
+        float t = utils::dot(point - ray.position, line_vector) / line_length_squared;
+        return ray.position + ray.direction * t;
+    }
 
-inline Vector2 max(const Vector2& v, const float& d) {
-    return {
-        std::max(v.x, d),
-        std::max(v.y, d)
-    };
-}
-
-inline float min(const float a, const float b) {
-    if (a > b) return b;
-    return a;
-}
+    inline Vector3 normalize(const Vector3& v) {
+        return v / utils::length(v);
+    }
 
 }
