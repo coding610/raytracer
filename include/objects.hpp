@@ -3,17 +3,25 @@
 #include <raylib.h>
 #include "utils.hpp"
 
-struct _Material {
-    Color color;
+
+struct Light {
+    Vector3 position;
+    float intensity;
+
+    Light(const Vector3& p, const float& i) : position(p), intensity(i) {}
 };
 
+
+struct _Material {
+    Vector3 color;
+};
 
 struct Sphere {
     const Vector3 center;
     const float radius;
-    const Color color;
+    const _Material material;
 
-    inline Sphere(const Vector3& c, const float& r, const Color clr) : center(c), radius(r), color(clr) { }
+    inline Sphere(const Vector3& c, const float& r, const _Material& m) : center(c), radius(r), material(m) { }
 
     // http://www.lighthouse3d.com/tutorials/maths/ray-sphere-intersection/
     // ray_t is the mulitplier for the direction

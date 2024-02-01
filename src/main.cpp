@@ -2,14 +2,21 @@
 #include "render.hpp"
 #include "objects.hpp"
 
+// https://github.com/ssloy/tinyraytracer/wiki/Part-1:-understandable-raytracing
+int main() {
+    _Material brown1 = {{0.4, 0.4, 0.3}};
+    _Material brown2 = {{0.3, 0.1, 0.1}};
 
-int main () {
-    const std::vector<Sphere> spheres = {
-        {{-3, 0, -16},          2,      Color(102, 102, 77, 255)},
-        {{-1, -1.5, -12},       2,      Color(77, 26, 26, 255)},
-        {{1.5, -0.5, -18},      2,      Color(77, 26, 26, 255)},
-        {{7, 5, -18},           2,      Color(102, 102, 77, 255)},
+    const std::vector<Light> lights = {
+        {{-20, 20, 20}, 3},
     };
 
-    render(spheres);
+    const std::vector<Sphere> spheres = {
+        {{-3, 0, -16},          2,      brown1},
+        {{-1, -1.5, -12},       2,      brown2},
+        {{1.5, -0.5, -18},      2,      brown2},
+        {{7, 5, -18},           2,      brown1},
+    };
+
+    render(spheres, lights);
 }

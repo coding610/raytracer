@@ -1,0 +1,2 @@
+# TODO
+    * Normalize color vectors
