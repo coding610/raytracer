@@ -19,7 +19,7 @@ int main() {
         .ambient_reflection = 1,
         .diffuse_reflection = 0.9,
         .specular_reflection = 0.1,
-        .specular_exponent = 1
+        .specular_exponent = 50
     };
 
     const std::vector<Light> lights {
