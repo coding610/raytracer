@@ -4,7 +4,7 @@
 #include "objects.hpp"
 #include "defines.hpp"
 
-    // https://github.com/ssloy/tinyraytracer/wiki/Part-1:-understandable-raytracing
+// https://github.com/ssloy/tinyraytracer/wiki/Part-1:-understandable-raytracing
 int main() {
     _Material light_metallic_brown = {
         .albedo = {0.6, 0.6, 0.5},

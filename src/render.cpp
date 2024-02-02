@@ -7,6 +7,7 @@
 #include <raylib.h>
 #include <vector>
 
+#define SCENE_LIGHTING 1
 
 Vector3 cast_ray(
     const Vector3& camera_position,
@@ -25,7 +26,7 @@ Vector3 cast_ray(
     bool collided = false;
     const Sphere* sphere_hit;
 
-    // Collision Spheres
+    // Collision with Spheres
     for (auto& sphere : spheres) {
         if (sphere.intersect(ray, dummy_distance)) {
             if (intersect_distance > dummy_distance) {
@@ -42,21 +43,19 @@ Vector3 cast_ray(
         // If you want to expand it, see the wiki page or previous commits
         // Variables or explenations removed will be marked as deprecated
         // (For me) NOTE: 
-        //      * mateiral.{diffuse or specular}_reflection * light.{diffuse or specular}_component
+        //      * material.{diffuse or specular}_reflection * light.{diffuse or specular}_component
         //      * is viewed in the raytracing series as one variable: "light.intensity"
         //      * but not really, as in the return statement, they multiply by albedo[0] and [1]
         //      * which is basically a mateiral.{d and s}_reflection
         //      * but light.{d or s}_component is not to be found (its just light.intensity)
     if (collided) {
-            // ** DEPRICATED **
-            // Scene lighting constant could is described in the wiki as ia,
-            // It is basically how bright the overall scene will be
-            // In other words, how much ambient lighting there is
-            // Sometimes it can be defined by the total lighting in the scene
-        float diffuse_lighting_intensity  = 0;
-        float specular_lighting_intensity = 0;
+            // Scene lighting is basically global lighting
+            // The same as ambient_reflection but global
+
+        float diffuse_lighting_intensity  = (sphere_hit->material.ambient_reflection - 1) + (SCENE_LIGHTING - 1);
+        float specular_lighting_intensity = (sphere_hit->material.ambient_reflection - 1) + (SCENE_LIGHTING - 1);
         for (auto& light : lights) {
-                // My explenation of Difuse Reflection
+                // My explenation of Difuse Reflection and Specular Reflection
                 // When you take the dot product of two vectors a and b, denoted as a⋅ba⋅b,
                 // the result is a scalar value equal to the product of the magnitudes of the
                 // two vectors and the cosine of the angle between them. This scalar value
@@ -78,25 +77,25 @@ Vector3 cast_ray(
                 // and otherwise, if it is below zero, nothing should happen because 
                 // that surface is not lit, thus the std::max function
                 //
-                // ** DEPRECATED **
-                // but now I use the phong reflection model, which is way more complex
-                // So you just have to buy it. But in previous commits i did just use
-                // diffuse lighting
+                // The same logic can be used for the specular reflection. Just use the same
+                // logic on the dotproduct as the reflection_direction. You can think of it as
+                // shrinking down the entire circles normal lighting into a small point. And that
+                // points size is detirmind by how large the exponent is. The higher the exponent,
+                // the more concentration
 
-            _Material material = sphere_hit->material;
             Vector3 hit = ray.position + intersect_distance * ray.direction;
-            Vector3 hit_normal = utils::normalize(hit - sphere_hit->center);                      // N^
-            Vector3 light_direction = utils::normalize(light.position - hit);                     // L_m^
-            Vector3 viewing_direction = utils::normalize(camera_position - hit);                  // V^
-            Vector3 reflection_direction = utils::calculate_norm_rd(light_direction, hit_normal); // R_m^
+            Vector3 hit_normal = utils::normalize(hit - sphere_hit->center);                      // N^     (variables from wiki)
+            Vector3 light_direction = utils::normalize(light.position - hit);                     // L_m^   (variables from wiki)
+            Vector3 viewing_direction = utils::normalize(camera_position - hit);                  // V^     (variables from wiki)
+            Vector3 reflection_direction = utils::calculate_norm_rd(light_direction, hit_normal); // R_m^   (variables from wiki)
 
-            // Difuse reflection
-            diffuse_lighting_intensity += material.diffuse_reflection * light.diffuse_component
+            // Difuse lighting
+            diffuse_lighting_intensity += sphere_hit->material.diffuse_reflection * light.diffuse_component
                                           * std::max(0.0f, utils::dot(light_direction, hit_normal));
             
-            // Specular reflection
-            specular_lighting_intensity += material.specular_reflection * light.specular_component
-                                           * std::pow(std::max(0.0f, utils::dot(reflection_direction, viewing_direction)), material.specular_exponent);
+            // Specular lighting
+            specular_lighting_intensity += sphere_hit->material.specular_reflection * light.specular_component
+                                           * std::pow(std::max(0.0f, utils::dot(reflection_direction, viewing_direction)), sphere_hit->material.specular_exponent);
         }
 
         return utils::minmax((diffuse_lighting_intensity + specular_lighting_intensity) * ambient_color);
@@ -136,24 +135,6 @@ T_PIXEL render_scene(
     return pixels;
 }
 
-void render_pixels(const T_PIXEL& pixels, const float& render_density, const bool& render_squares) {
-    for (int y = 0; y < GetRenderHeight() / render_density; y++) {
-        for (int x = 0; x < GetRenderWidth() / render_density; x++) {
-            if (render_squares) {
-                DrawRectangleRec(
-                    Rectangle(x * render_density, y * render_density, render_density, render_density),
-                    utils::vec_to_color(255 * pixels[y][x])
-                );
-            } else {
-                DrawPixel(
-                    x * render_density, y * render_density,
-                    utils::vec_to_color(255 * pixels[y][x])
-                );
-            }
-        }
-    }
-}
-
 Texture2D create_texture(T_PIXEL pixels) {
     T_COLOR colors = utils::adjust_pixels(pixels);
     Image image;
@@ -185,7 +166,6 @@ void render(
     const float focal_length = 0.6;
     const float fov = PI / 2;
     const float render_density = 1;
-    const bool render_squares = true;
 
     // Pre-Render scene
     T_PIXEL pixels = render_scene(camera_position, focal_length, render_density, fov, spheres, lights);

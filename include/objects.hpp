@@ -8,16 +8,16 @@
 // https://en.wikipedia.org/wiki/Phong_reflection_model
 struct _Material {
     Vector3 albedo;                         // The base color for a material
-    const float ambient_reflection;         // how bright the material is on the ambient side. basically how bright the albedo is
-    const float diffuse_reflection;         // albedo 0 in raytracing series
-    const float specular_reflection;        // albedo 1 in raytracing series
-    const float specular_exponent;          // Shininess
+    const float ambient_reflection;         // How bright the material is on the ambient side. Basically how bright it overall is
+    const float diffuse_reflection;         // albedo 0 in raytracing series. How noticable the difuse shadows are
+    const float specular_reflection;        // albedo 1 in raytracing series. How noticable the specular highlights are
+    const float specular_exponent;          // How dense the specular highlights are. Higher values -> more dense
 };
 
 struct Light {
     const Vector3 position;
-    const float specular_component; // Is float intensity in raytracing series
-    const float diffuse_component;  // Is float intensity in raytracing series
+    const float specular_component; // Is float intensity in raytracing series. Acts the same as specular_reflection but it's global on all objects hit by this light
+    const float diffuse_component;  // Is float intensity in raytracing series. Acts the same as diffuse_reflection but it's global on all objects hit by this light
 };
 
 struct Sphere {
