@@ -26,12 +26,12 @@ inline Vector3 operator / (const Vector3& v1, const float& f) {
 
 ////// DEBUG UTILS //////
 template <typename T>
-inline void DEB(T m) {
+inline void DEB(T& m) {
     std::cout << m << "\n";
 }
 
-inline void DEB(const Vector2& m) {
-    std::cout << m.x << " " << m.y << "\n";
+inline void DEB(const Vector3& m) {
+    std::cout << m.x << " " << m.y << " " << m.z << "\n";
 }
 ////// NAMESPACE UTILS //////
 namespace utils {
@@ -59,11 +59,11 @@ namespace utils {
         return Color(v.x, v.y, v.z, 255);
     }
 
-    inline Vector3 min(const Vector3& v) {
+    inline Vector3 min(const float& f, const Vector3& v) {
         Vector3 c = v;
-        c.x = std::min(v.x, 1.0f);
-        c.y = std::min(v.y, 1.0f);
-        c.z = std::min(v.z, 1.0f);
+        c.x = std::min(v.x, f);
+        c.y = std::min(v.y, f);
+        c.z = std::min(v.z, f);
 
         return c;
     }

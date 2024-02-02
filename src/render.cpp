@@ -19,12 +19,12 @@ Vector3 cast_ray(
     const std::vector<Light>& lights
 ) {
     // Variables
-    Vector3 ambient_color = {0.2, 0.7, 0.8}; // Background Color
+    Vector3 ambient_color = {0.0, 0.0, 0.0}; // Background Color
     float intersect_distance = std::numeric_limits<float>::max();
     float dummy_distance;
     bool collided = false;
     Vector3 hit;
-    Vector3 normalized_edge;
+    Vector3 hit_direction;
 
     // Collision Spheres
     for (auto& sphere : spheres) {
@@ -32,22 +32,45 @@ Vector3 cast_ray(
             if (intersect_distance > dummy_distance) {
                 intersect_distance = dummy_distance; collided = true;
                 ambient_color = sphere.material.color;
+
+                // Lighting
                 hit = ray.position + intersect_distance * ray.direction;
-                normalized_edge = utils::normalize(hit - sphere.center);
+                hit_direction = utils::normalize(hit - sphere.center);
             }
         }
     }
 
     // Lighting
-    float diffuse_light_intensity = 0;
-    if (collided) {
+    float diffuse_light_intensity = 1;
+    if (collided) { diffuse_light_intensity = 0;
         for (auto& light : lights) {
-            Vector3 light_dir = utils::normalize((light.position - hit));
-            diffuse_light_intensity += light.intensity * std::max(0.0f, utils::dot(light_dir, normalized_edge));
+            // When you take the dot product of two vectors a and b, denoted as a⋅ba⋅b,
+            // the result is a scalar value equal to the product of the magnitudes of the
+            // two vectors and the cosine of the angle between them. This scalar value
+            // can be seen as a measure of "how much" of one vector lies in the direction
+            // of the other vector.
+            //
+            // For example, if the dot product is positive, it means that the vectors are
+            // pointing in roughly the same direction. If it's negative, they're pointing
+            // in roughly opposite directions. And if it's zero, it means the vectors are
+            // orthogonal (perpendicular) to each other.
+            //
+            // postive dot product -> same direction
+            // negative dot product -> oppsite directions
+            // 0 dot product -> perpendicular to each other
+            //
+            // So in our case, if a the dot product between the light_direction and
+            // the hit direction is positive, the result should be a lit surface
+            // because they are poitning in roughly the same direction
+            // and otherwise, if it is below zero, nothing should happen because 
+            // that surface is not lit, thus the std::max function
+
+            Vector3 light_direction = utils::normalize(light.position - hit);
+            diffuse_light_intensity += light.intensity * std::max(0.0f, utils::dot(light_direction, hit_direction));
         }
     }
 
-    return utils::min(diffuse_light_intensity * ambient_color);
+    return utils::min(1, diffuse_light_intensity * ambient_color);
 }
 
 T_PIXEL render_scene(
