@@ -87,9 +87,9 @@ Vector3 cast_ray(
                                   * light.diffuse_component;
             
             // Specular reflection
-            // total_illumenation += material.specular_reflection
-            //                       * std::pow(std::max(0.0f, utils::dot(reflection_direction, viewing_direction)), material.shininess)
-            //                       * light.specular_component;
+            total_illumenation += material.specular_reflection
+                                  * std::pow(std::max(0.0f, utils::dot(reflection_direction, viewing_direction)), material.shininess)
+                                  * light.specular_component;
         }
     }
 
@@ -157,7 +157,10 @@ Texture2D create_texture(T_PIXEL pixels) {
     return LoadTextureFromImage(image);
 }
 
-void render(const std::vector<Sphere>& spheres, const std::vector<Light>& lights) {
+void render(
+    const std::vector<Sphere>& spheres,
+    const std::vector<Light>& lights
+) {
     // Camera
     const float ratio = 16.0 / 9.0;
     const int height = 1000;
