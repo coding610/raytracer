@@ -4,6 +4,8 @@
 #include <raylib.h>
 #include <iostream>
 #include <math.h>
+#include <vector>
+#include "defines.hpp"
 
 
 ////// VECTOR OPERATOR OVERLOADING //////
@@ -56,7 +58,7 @@ namespace utils {
     }
 
     inline Color vec_to_color(const Vector3& v) {
-        return Color(v.x, v.y, v.z, 255);
+        return Color(255 * v.x, 255 * v.y, 255 * v.z, 255);
     }
 
     inline Vector3 min(const float& f, const Vector3& v) {
@@ -67,4 +69,20 @@ namespace utils {
 
         return c;
     }
+
+    // This function does the following
+    // * Flatten the vector to a lol instead of a lolol
+    // * Convert a Vector3 into Color
+    inline T_COLOR adjust_pixels(T_PIXEL pixels) {
+        std::vector<Color> colors;
+
+        for (const auto& row : pixels) {
+            for (const auto& p : row) {
+                colors.push_back(utils::vec_to_color(p));
+            }
+        }
+
+        return colors;
+    }
+
 }

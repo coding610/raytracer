@@ -1,15 +1,11 @@
 #include "objects.hpp"
+#include "defines.hpp"
 #include "utils.hpp"
 #include <cmath>
 #include <cstddef>
 #include <limits>
 #include <raylib.h>
 #include <vector>
-
-// I know this is bad practise
-// but I do not feel like writing
-// this type in every damn function parameter
-#define T_PIXEL std::vector<std::vector<Vector3>>
 
 
 Vector3 cast_ray(
@@ -18,8 +14,12 @@ Vector3 cast_ray(
     const std::vector<Sphere>& spheres,
     const std::vector<Light>& lights
 ) {
-    // Variables
-    Vector3 ambient_color = {0.0, 0.0, 0.0}; // Background Color
+    // Background color
+    Vector3 color_from = {0.5, 0.7, 1.0};
+    Vector3 color_to = {0.8, 0.8, 1.0};
+    float lerp = 0.5 - ray.direction.y;
+    Vector3 ambient_color = (1 - lerp) * color_from + lerp * color_to;
+
     float intersect_distance = std::numeric_limits<float>::max();
     float dummy_distance;
     bool collided = false;
@@ -42,7 +42,8 @@ Vector3 cast_ray(
 
     // Lighting
     float diffuse_light_intensity = 1;
-    if (collided) { diffuse_light_intensity = 0;
+    if (collided) {
+        diffuse_light_intensity = 0;
         for (auto& light : lights) {
             // When you take the dot product of two vectors a and b, denoted as a⋅ba⋅b,
             // the result is a scalar value equal to the product of the magnitudes of the
@@ -82,15 +83,16 @@ T_PIXEL render_scene(
     const std::vector<Light> lights
 ) {
     // Constants
-    const float width = GetRenderWidth();
+    const float width  = GetRenderWidth();
     const float height = GetRenderHeight();
 
     T_PIXEL pixels;
-    for (int _y = 0; _y < (int) height / render_density; _y++) {
-        std::vector<Vector3> slice;
-        for (int _x = 0; _x < (int) width / render_density; _x++) {
-            const float x =  (2 * (render_density * _x) / (float) width - 1) * tan(fov / 2.0) * width / (float) height;
-            const float y = -(2 * (render_density * _y) / (float) height - 1) * tan(fov / 2.0);
+    std::vector<Vector3> slice;
+    for (int _y = 0; _y < static_cast<int>(height / render_density); _y++) {
+        slice.clear();
+        for (int _x = 0; _x < static_cast<int>(width / render_density); _x++) {
+            const float x =  (2 * (render_density * _x) / width - 1) * tan(fov / 2.0) * width / height;
+            const float y = -(2 * (render_density * _y) / height - 1) * tan(fov / 2.0);
             Ray r = {
                 camera_position,
                 utils::normalize({ x, y, -1 / focal_length })
@@ -121,11 +123,23 @@ void render_pixels(const T_PIXEL& pixels, const float& render_density, const boo
     }
 }
 
+Texture2D create_texture(T_PIXEL pixels) {
+    T_COLOR colors = utils::adjust_pixels(pixels);
+    Image image;
+    image.data = colors.data();
+    image.width = static_cast<int>(pixels[0].size());
+    image.height = static_cast<int>(pixels.size());
+    image.mipmaps = 1;
+    image.format =  PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
+
+    return LoadTextureFromImage(image);
+}
+
 void render(const std::vector<Sphere>& spheres, const std::vector<Light>& lights) {
     // Camera
     const float ratio = 16.0 / 9.0;
-    const float height = 1000;
-    const float width = ratio * height;
+    const int height = 1000;
+    const int width = ratio * height;
 
     // Setup Raylib
     SetTraceLogLevel(LOG_WARNING);
@@ -141,13 +155,15 @@ void render(const std::vector<Sphere>& spheres, const std::vector<Light>& lights
 
     // Pre-Render scene
     T_PIXEL pixels = render_scene(camera_position, focal_length, render_density, fov, spheres, lights);
+    Texture2D texture = create_texture(pixels);
 
-    // Render Vector3s
     while (!WindowShouldClose()) {
         BeginDrawing();
             ClearBackground(BLACK);
-            render_pixels(pixels, render_density, render_squares);
+            DrawTexture(texture, 0, 0, WHITE);
             DrawFPS(10, 10);
         EndDrawing();
     }
+
+    UnloadTexture(texture);
 }

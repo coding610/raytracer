@@ -1,6 +1,8 @@
+#include <cstdint>
 #include <vector>
 #include "render.hpp"
 #include "objects.hpp"
+#include "defines.hpp"
 
 // https://github.com/ssloy/tinyraytracer/wiki/Part-1:-understandable-raytracing
 int main() {

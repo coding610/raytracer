@@ -1,2 +1,2 @@
 # TODO
-    * Normalize color vectors
+    * From (int) a casting to static_cast<int>(a)
