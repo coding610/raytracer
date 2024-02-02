@@ -12,6 +12,7 @@ struct _Material {
     const float diffuse_reflection;         // albedo 0 in raytracing series. How noticable the difuse shadows are
     const float specular_reflection;        // albedo 1 in raytracing series. How noticable the specular highlights are
     const float specular_exponent;          // How dense the specular highlights are. Higher values -> more dense
+    const float reflective_constant;        // How much the object is like a mirror. 1 is a perfect mirror. 0.5 is a little blurred mirror
 };
 
 struct Light {

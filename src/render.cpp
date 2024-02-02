@@ -1,19 +1,24 @@
+#include <raylib.h>
+#include <unistd.h>
+#include <cstddef>
+#include <cmath>
+#include <limits>
+#include <vector>
 #include "objects.hpp"
 #include "defines.hpp"
 #include "utils.hpp"
-#include <cmath>
-#include <cstddef>
-#include <limits>
-#include <raylib.h>
-#include <vector>
 
+// RAYTRACING CONSTANTS
 #define SCENE_LIGHTING 1
+#define MAX_REFLECTION_DEPTH 7
 
-Vector3 cast_ray(
+
+[[nodiscard]] Vector3 cast_ray(
     const Vector3& camera_position,
     const Ray& ray,
     const std::vector<Sphere>& spheres,
-    const std::vector<Light>& lights
+    const std::vector<Light>& lights,
+    const int& reflection_depth
 ) {
     // Background color
     Vector3 color_from = {0.5, 0.7, 1.0};
@@ -37,6 +42,28 @@ Vector3 cast_ray(
         }
     }
 
+    // Convientent constants
+    const Vector3 hit = ray.position + intersect_distance * ray.direction;
+    const Vector3 hit_normal = utils::normalize(hit - sphere_hit->center);                      // N^     (variables from wiki)
+    const Vector3 viewing_direction = utils::normalize(camera_position - hit);                  // V^     (variables from wiki)
+
+    if (collided && sphere_hit->material.reflective_constant != 0) {
+        if (reflection_depth < MAX_REFLECTION_DEPTH) [[likely]] {
+            // We have to offset the origin point of the ray to avoid
+            // colliding with the object it self
+
+            ambient_color = cast_ray(
+                camera_position, {
+                    hit + 0.01 * hit_normal,
+                    utils::reflect(viewing_direction, hit_normal)
+                },
+                spheres,
+                lights,
+                reflection_depth + 1
+            );
+        }
+    }
+
         // https://en.wikipedia.org/wiki/Phong_reflection_model
         // all of the logic is shown on the wiki page above
         // This code below is simplified and is provided by raytracing series
@@ -48,10 +75,9 @@ Vector3 cast_ray(
         //      * but not really, as in the return statement, they multiply by albedo[0] and [1]
         //      * which is basically a mateiral.{d and s}_reflection
         //      * but light.{d or s}_component is not to be found (its just light.intensity)
-    if (collided) {
+    if (collided && sphere_hit->material.reflective_constant == 0) {
             // Scene lighting is basically global lighting
             // The same as ambient_reflection but global
-
         float diffuse_lighting_intensity  = (sphere_hit->material.ambient_reflection - 1) + (SCENE_LIGHTING - 1);
         float specular_lighting_intensity = (sphere_hit->material.ambient_reflection - 1) + (SCENE_LIGHTING - 1);
         for (auto& light : lights) {
@@ -83,11 +109,9 @@ Vector3 cast_ray(
                 // points size is detirmind by how large the exponent is. The higher the exponent,
                 // the more concentration
 
-            Vector3 hit = ray.position + intersect_distance * ray.direction;
-            Vector3 hit_normal = utils::normalize(hit - sphere_hit->center);                      // N^     (variables from wiki)
-            Vector3 light_direction = utils::normalize(light.position - hit);                     // L_m^   (variables from wiki)
-            Vector3 viewing_direction = utils::normalize(camera_position - hit);                  // V^     (variables from wiki)
-            Vector3 reflection_direction = utils::calculate_norm_rd(light_direction, hit_normal); // R_m^   (variables from wiki)
+            // Light dependent directions
+            const Vector3 light_direction = utils::normalize(light.position - hit);                     // L_m^   (variables from wiki)
+            const Vector3 reflection_direction = utils::reflect(light_direction, hit_normal);           // R_m^   (variables from wiki)
 
             // Difuse lighting
             diffuse_lighting_intensity += sphere_hit->material.diffuse_reflection * light.diffuse_component
@@ -104,7 +128,7 @@ Vector3 cast_ray(
     }
 }
 
-T_PIXEL render_scene(
+[[nodiscard]] T_PIXEL render_scene(
     const Vector3& camera_position,
     const float& focal_length,
     const float& render_density,
@@ -112,13 +136,14 @@ T_PIXEL render_scene(
     const std::vector<Sphere> spheres,
     const std::vector<Light> lights
 ) {
-    // Constants
     const float width  = GetRenderWidth();
     const float height = GetRenderHeight();
 
     T_PIXEL pixels;
     std::vector<Vector3> slice;
     for (int _y = 0; _y < static_cast<int>(height / render_density); _y++) {
+        utils::progress_bar(_y, static_cast<int>(height / render_density), 50);
+
         slice.clear();
         for (int _x = 0; _x < static_cast<int>(width / render_density); _x++) {
             const float x =  (2 * (render_density * _x) / width - 1) * tan(fov / 2.0) * width / height;
@@ -128,14 +153,15 @@ T_PIXEL render_scene(
                 utils::normalize({ x, y, -1 / focal_length })
             };
 
-            slice.push_back(cast_ray(camera_position, r, spheres, lights));
-        } pixels.push_back(slice);
+            slice.push_back(cast_ray(camera_position, r, spheres, lights, 0));
+        }
+        pixels.push_back(slice);
     }
 
     return pixels;
 }
 
-Texture2D create_texture(T_PIXEL pixels) {
+[[nodiscard]] Texture2D create_texture(T_PIXEL pixels) {
     T_COLOR colors = utils::adjust_pixels(pixels);
     Image image;
     image.data = colors.data();

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <math.h>
 #include <vector>
+#include <iomanip>
 #include "defines.hpp"
 
 
@@ -91,7 +92,7 @@ namespace utils {
     // This function does the following
     // * Flatten the vector to a lol instead of a lolol
     // * Convert a Vector3 into Color
-    inline T_COLOR adjust_pixels(T_PIXEL pixels) {
+    inline T_COLOR adjust_pixels(const T_PIXEL& pixels) {
         std::vector<Color> colors;
 
         for (const auto& row : pixels) {
@@ -103,8 +104,20 @@ namespace utils {
         return colors;
     }
 
-    inline Vector3 calculate_norm_rd(Vector3 light_direction, Vector3 hit_normal) {
+    inline Vector3 reflect(const Vector3& light_direction, const Vector3& hit_normal) {
         return utils::normalize(2 * utils::dot(light_direction, hit_normal) * hit_normal - light_direction);
     }
 
+    inline void progress_bar(const float value, const float max_value, const int bar_length) {
+    double percentage = static_cast<double>(value) / max_value;
+    int pos = static_cast<int>(bar_length * percentage);
+
+    std::cout << "[";
+    for (int i = 0; i < bar_length; ++i) {
+        if (i < pos) std::cout << "#";
+        else std::cout << "-";
+    }
+    std::cout << "] " << std::fixed << std::setprecision(2) << percentage * 100.0 << "%\r";
+    std::cout.flush();
+    }
 }
