@@ -70,6 +70,15 @@ namespace utils {
         return c;
     }
 
+    inline Vector3 max(const float& f, const Vector3& v) {
+        Vector3 c = v;
+        c.x = std::max(v.x, f);
+        c.y = std::max(v.y, f);
+        c.z = std::max(v.z, f);
+
+        return c;
+    }
+
     // This function does the following
     // * Flatten the vector to a lol instead of a lolol
     // * Convert a Vector3 into Color
@@ -83,6 +92,10 @@ namespace utils {
         }
 
         return colors;
+    }
+
+    inline Vector3 calculate_norm_rd(Vector3 light_direction, Vector3 hit_normal) {
+        return utils::normalize(2 * utils::dot(light_direction, hit_normal) * hit_normal - light_direction);
     }
 
 }

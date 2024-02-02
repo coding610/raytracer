@@ -4,16 +4,18 @@
 #include "utils.hpp"
 
 
-struct Light {
-    Vector3 position;
-    float intensity;
-
-    Light(const Vector3& p, const float& i) : position(p), intensity(i) {}
+struct _Material {
+    Vector3 albedo;             // The base color for a material
+    const float ambient_reflection;
+    const float specular_reflection;
+    const float diffuse_reflection;
+    const float shininess; // TODO: update this name
 };
 
-
-struct _Material {
-    Vector3 color;
+struct Light {
+    const Vector3 position;
+    const float specular_component;
+    const float diffuse_component;
 };
 
 struct Sphere {

@@ -6,12 +6,29 @@
 
 // https://github.com/ssloy/tinyraytracer/wiki/Part-1:-understandable-raytracing
 int main() {
-    _Material light_brown = {{0.4, 0.4, 0.3}};
-    _Material dark_brown  = {{0.3, 0.1, 0.1}};
-
-    const std::vector<Light> lights = {
-        {{-20, 20, 20}, 2},
+    _Material light_brown = {
+        .albedo = {0.6, 0.6, 0.5},
+        .ambient_reflection = 1.2,
+        .specular_reflection = 1.5,
+        .diffuse_reflection = 1.6,
+        .shininess = 2.0
     };
+
+    _Material dark_brown = {
+        .albedo = {0.2, 0.05, 0.05},
+        .ambient_reflection = 1.2,
+        .specular_reflection = 0.8,
+        .diffuse_reflection = 1.2,
+        .shininess = 1.2
+    };
+
+    // lights.push_back(Light(Vec3f( 30, 50, -25), 1.8));
+    // lights.push_back(Light(Vec3f( 30, 20,  30), 1.7));
+    const std::vector<Light> lights = {{
+        .position = {-20, 20, 20},
+        .specular_component = 1.3,
+        .diffuse_component = 1.5
+    }};
 
     const std::vector<Sphere> spheres = {
         {{-3, 0, -16},          2,      light_brown     },
