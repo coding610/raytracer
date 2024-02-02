@@ -79,6 +79,15 @@ namespace utils {
         return c;
     }
 
+    inline Vector3 minmax(const Vector3& v) {
+        Vector3 c = v;
+        c.x = std::min(std::max(v.x, 0.0f), 1.0f);
+        c.y = std::min(std::max(v.y, 0.0f), 1.0f);
+        c.z = std::min(std::max(v.z, 0.0f), 1.0f);
+
+        return c;
+    }
+
     // This function does the following
     // * Flatten the vector to a lol instead of a lolol
     // * Convert a Vector3 into Color

@@ -4,18 +4,20 @@
 #include "utils.hpp"
 
 
+// For more information:
+// https://en.wikipedia.org/wiki/Phong_reflection_model
 struct _Material {
-    Vector3 albedo;             // The base color for a material
-    const float ambient_reflection;
-    const float specular_reflection;
-    const float diffuse_reflection;
-    const float shininess; // TODO: update this name
+    Vector3 albedo;                         // The base color for a material
+    const float ambient_reflection;         // how bright the material is on the ambient side. basically how bright the albedo is
+    const float diffuse_reflection;         // albedo 0 in raytracing series
+    const float specular_reflection;        // albedo 1 in raytracing series
+    const float specular_exponent;          // Shininess
 };
 
 struct Light {
     const Vector3 position;
-    const float specular_component;
-    const float diffuse_component;
+    const float specular_component; // Is float intensity in raytracing series
+    const float diffuse_component;  // Is float intensity in raytracing series
 };
 
 struct Sphere {

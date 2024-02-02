@@ -36,19 +36,27 @@ Vector3 cast_ray(
         }
     }
 
-    // https://en.wikipedia.org/wiki/Phong_reflection_model
-    // all of the logic is shown on the wiki page above
-    float total_illumenation = 1;
-    const float scene_lighting_constant = 1;
+        // https://en.wikipedia.org/wiki/Phong_reflection_model
+        // all of the logic is shown on the wiki page above
+        // This code below is simplified and is provided by raytracing series
+        // If you want to expand it, see the wiki page or previous commits
+        // Variables or explenations removed will be marked as deprecated
+        // (For me) NOTE: 
+        //      * mateiral.{diffuse or specular}_reflection * light.{diffuse or specular}_component
+        //      * is viewed in the raytracing series as one variable: "light.intensity"
+        //      * but not really, as in the return statement, they multiply by albedo[0] and [1]
+        //      * which is basically a mateiral.{d and s}_reflection
+        //      * but light.{d or s}_component is not to be found (its just light.intensity)
     if (collided) {
-        // Scene lighting constant could is described in the wiki as ia,
-        // It is basically how bright the overall scene will be
-        // In other words, how much ambient lighting there is
-        // Sometimes it can be defined by the total lighting in the scene
-
-        total_illumenation = sphere_hit->material.ambient_reflection * scene_lighting_constant;
+            // ** DEPRICATED **
+            // Scene lighting constant could is described in the wiki as ia,
+            // It is basically how bright the overall scene will be
+            // In other words, how much ambient lighting there is
+            // Sometimes it can be defined by the total lighting in the scene
+        float diffuse_lighting_intensity  = 0;
+        float specular_lighting_intensity = 0;
         for (auto& light : lights) {
-            // My explenation of Difuse Reflection
+                // My explenation of Difuse Reflection
                 // When you take the dot product of two vectors a and b, denoted as a⋅ba⋅b,
                 // the result is a scalar value equal to the product of the magnitudes of the
                 // two vectors and the cosine of the angle between them. This scalar value
@@ -70,6 +78,7 @@ Vector3 cast_ray(
                 // and otherwise, if it is below zero, nothing should happen because 
                 // that surface is not lit, thus the std::max function
                 //
+                // ** DEPRECATED **
                 // but now I use the phong reflection model, which is way more complex
                 // So you just have to buy it. But in previous commits i did just use
                 // diffuse lighting
@@ -82,18 +91,18 @@ Vector3 cast_ray(
             Vector3 reflection_direction = utils::calculate_norm_rd(light_direction, hit_normal); // R_m^
 
             // Difuse reflection
-            total_illumenation += material.diffuse_reflection
-                                  * utils::dot(light_direction, hit_normal)
-                                  * light.diffuse_component;
+            diffuse_lighting_intensity += material.diffuse_reflection * light.diffuse_component
+                                          * std::max(0.0f, utils::dot(light_direction, hit_normal));
             
             // Specular reflection
-            total_illumenation += material.specular_reflection
-                                  * std::pow(std::max(0.0f, utils::dot(reflection_direction, viewing_direction)), material.shininess)
-                                  * light.specular_component;
+            specular_lighting_intensity += material.specular_reflection * light.specular_component
+                                           * std::pow(std::max(0.0f, utils::dot(reflection_direction, viewing_direction)), material.specular_exponent);
         }
-    }
 
-    return utils::max(0, utils::min(1, total_illumenation * ambient_color));
+        return utils::minmax((diffuse_lighting_intensity + specular_lighting_intensity) * ambient_color);
+    } else {
+        return ambient_color;
+    }
 }
 
 T_PIXEL render_scene(
@@ -173,7 +182,7 @@ void render(
 
     // Raytracing constants
     Vector3 camera_position = {0, 0, 0};
-    const float focal_length = 1;
+    const float focal_length = 0.6;
     const float fov = PI / 2;
     const float render_density = 1;
     const bool render_squares = true;
@@ -182,11 +191,31 @@ void render(
     T_PIXEL pixels = render_scene(camera_position, focal_length, render_density, fov, spheres, lights);
     Texture2D texture = create_texture(pixels);
 
+    bool movement = false;
     while (!WindowShouldClose()) {
+        if (IsKeyDown(KEY_LEFT))         { camera_position.x -= 0.1; movement = true; }
+        if (IsKeyDown(KEY_RIGHT))        { camera_position.x += 0.1; movement = true; }
+        if (IsKeyDown(KEY_UP))           { camera_position.z -= 0.1; movement = true; }
+        if (IsKeyDown(KEY_DOWN))         { camera_position.z += 0.1; movement = true; }
+        if (IsKeyDown(KEY_SPACE))        { camera_position.y += 0.1; movement = true; }
+        if (IsKeyDown(KEY_LEFT_CONTROL)) { camera_position.y -= 0.1; movement = true; }
+        if (movement) {
+            pixels = render_scene(camera_position, focal_length, render_density, fov, spheres, lights);
+            texture = create_texture(pixels);
+            movement = false;
+        }
+
         BeginDrawing();
             ClearBackground(BLACK);
-            DrawTexture(texture, 0, 0, WHITE);
-            DrawFPS(10, 10);
+            DrawTexturePro( texture,
+                Rectangle(
+                    0, 0,
+                    width / render_density, height / render_density
+                ), Rectangle(
+                    0, 0, width, height
+                ), {0, 0}, 0, WHITE
+            );
+
         EndDrawing();
     }
 
