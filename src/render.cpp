@@ -6,6 +6,9 @@
 #include <raylib.h>
 #include <vector>
 
+// I know this is bad practise
+// but I do not feel like writing
+// this type in every damn function parameter
 #define T_PIXEL std::vector<std::vector<Vector3>>
 
 
@@ -36,9 +39,8 @@ Vector3 cast_ray(
     }
 
     // Lighting
-    float diffuse_light_intensity = 1;
+    float diffuse_light_intensity = 0;
     if (collided) {
-        diffuse_light_intensity = 0;
         for (auto& light : lights) {
             Vector3 light_dir = utils::normalize((light.position - hit));
             diffuse_light_intensity += light.intensity * std::max(0.0f, utils::dot(light_dir, normalized_edge));
@@ -48,7 +50,37 @@ Vector3 cast_ray(
     return utils::min(diffuse_light_intensity * ambient_color);
 }
 
-void render_pixels(const T_PIXEL pixels, const float render_density, const bool render_squares) {
+T_PIXEL render_scene(
+    const Vector3& camera_position,
+    const float& focal_length,
+    const float& render_density,
+    const float& fov,
+    const std::vector<Sphere> spheres,
+    const std::vector<Light> lights
+) {
+    // Constants
+    const float width = GetRenderWidth();
+    const float height = GetRenderHeight();
+
+    T_PIXEL pixels;
+    for (int _y = 0; _y < (int) height / render_density; _y++) {
+        std::vector<Vector3> slice;
+        for (int _x = 0; _x < (int) width / render_density; _x++) {
+            const float x =  (2 * (render_density * _x) / (float) width - 1) * tan(fov / 2.0) * width / (float) height;
+            const float y = -(2 * (render_density * _y) / (float) height - 1) * tan(fov / 2.0);
+            Ray r = {
+                camera_position,
+                utils::normalize({ x, y, -1 / focal_length })
+            };
+
+            slice.push_back(cast_ray(camera_position, r, spheres, lights));
+        } pixels.push_back(slice);
+    }
+
+    return pixels;
+}
+
+void render_pixels(const T_PIXEL& pixels, const float& render_density, const bool& render_squares) {
     for (int y = 0; y < GetRenderHeight() / render_density; y++) {
         for (int x = 0; x < GetRenderWidth() / render_density; x++) {
             if (render_squares) {
@@ -78,33 +110,21 @@ void render(const std::vector<Sphere>& spheres, const std::vector<Light>& lights
     SetTargetFPS(60);
 
     // Raytracing constants
-    const Vector3 camera_position = {0, 0, 0};
+    Vector3 camera_position = {0, 0, 0};
     const float focal_length = 0.5;
     const float fov = PI / 2;
     const float render_density = 1;
     const bool render_squares = true;
 
-    // Calculate Pixels
-    T_PIXEL pixels;
-    for (int _y = 0; _y < (int) height / render_density; _y++) {
-        std::vector<Vector3> slice;
-        for (int _x = 0; _x < (int) width / render_density; _x++) {
-            const float x =  (2 * (render_density * _x) / (float) width - 1) * tan(fov / 2.0) * width / (float) height;
-            const float y = -(2 * (render_density * _y) / (float) height - 1) * tan(fov / 2.0);
-            Ray r = {
-                camera_position,
-                utils::normalize({ x, y, -1 / focal_length })
-            };
-
-            slice.push_back(cast_ray(camera_position, r, spheres, lights));
-        } pixels.push_back(slice);
-    }
+    // Pre-Render scene
+    T_PIXEL pixels = render_scene(camera_position, focal_length, render_density, fov, spheres, lights);
 
     // Render Vector3s
     while (!WindowShouldClose()) {
         BeginDrawing();
             ClearBackground(BLACK);
             render_pixels(pixels, render_density, render_squares);
+            DrawFPS(10, 10);
         EndDrawing();
     }
 }

@@ -8,7 +8,7 @@ int main() {
     _Material brown2 = {{0.3, 0.1, 0.1}};
 
     const std::vector<Light> lights = {
-        {{-20, 20, 20}, 3},
+        {{-20, 20, 20}, 2},
     };
 
     const std::vector<Sphere> spheres = {
