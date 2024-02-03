@@ -29,7 +29,6 @@ debugcompile:
 .PHONY: debugcompile
 
 debug_clean:
-	rm -r $(EXE_PATH)debug.dSYM
 	mv a.out $(EXE_PATH)debug
 	mv a.out.dSYM $(EXE_PATH)debug.dSYM
 

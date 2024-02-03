@@ -14,12 +14,20 @@ inline Vector3 operator + (const Vector3& v1, const Vector3& v2) {
     return { v1.x + v2.x, v1.y + v2.y, v1.z + v2.z };
 }
 
+inline void operator += (Vector3& v1, const Vector3& v2) {
+    v1.x += v2.x; v1.y += v2.y; v1.z += v2.z;
+}
+
 inline Vector3 operator - (const Vector3& v1, const Vector3& v2) {
     return { v1.x - v2.x, v1.y - v2.y, v1.z - v2.z };
 }
 
 inline Vector3 operator * (const float& f, const Vector3& v1) {
     return { v1.x * f, v1.y * f, v1.z * f };
+}
+
+inline void operator *= (Vector3& v1, const float& f) {
+    v1.x *= f; v1.y *= f; v1.z *= f;
 }
 
 inline Vector3 operator / (const Vector3& v1, const float& f) {
@@ -89,35 +97,64 @@ namespace utils {
         return c;
     }
 
-    // This function does the following
-    // * Flatten the vector to a lol instead of a lolol
-    // * Convert a Vector3 into Color
-    inline T_COLOR adjust_pixels(const T_PIXEL& pixels) {
-        std::vector<Color> colors;
-
-        for (const auto& row : pixels) {
-            for (const auto& p : row) {
-                colors.push_back(utils::vec_to_color(p));
-            }
-        }
-
-        return colors;
-    }
-
     inline Vector3 reflect(const Vector3& light_direction, const Vector3& hit_normal) {
         return utils::normalize(2 * utils::dot(light_direction, hit_normal) * hit_normal - light_direction);
     }
 
     inline void progress_bar(const float value, const float max_value, const int bar_length) {
-    double percentage = static_cast<double>(value) / max_value;
-    int pos = static_cast<int>(bar_length * percentage);
+        double percentage = static_cast<double>(value) / max_value;
+        int pos = static_cast<int>(bar_length * percentage);
 
-    std::cout << "[";
-    for (int i = 0; i < bar_length; ++i) {
-        if (i < pos) std::cout << "#";
-        else std::cout << "-";
+        std::cout << "[";
+        for (int i = 0; i < bar_length; ++i) {
+            if (i < pos) std::cout << "#";
+            else std::cout << "-";
+        }
+        std::cout << "] " << std::fixed << std::setprecision(2) << percentage * 100.0 << "%\r";
+        std::cout.flush();
     }
-    std::cout << "] " << std::fixed << std::setprecision(2) << percentage * 100.0 << "%\r";
-    std::cout.flush();
+
+    inline float random_num(float min, float max) {
+        double random = ((double) rand() / (RAND_MAX));
+        double range = max - min;
+        return (random * range + min);
+    }
+
+    inline Vector3 average_color(std::vector<Vector3> pixels) {
+        Vector3 clr = {0, 0, 0};
+        for (auto& p : pixels) clr += p / pixels.size();
+        return clr;
+    }
+
+    // Anti aliasing
+    // Flatten
+    // Convert Vec3 to color
+    inline T_COLOR adjust_pixels(const T_PIXEL& pixels, const int& downscale) {
+        int new_width = static_cast<int>(pixels.front().size() / downscale);
+        int new_height = static_cast<int>(pixels.size() / downscale);
+        T_PIXEL AA_pixels(new_height, std::vector<Vector3>(new_width));
+
+        std::vector<Vector3> averaging_pixels;
+        for (int y = 0; y < new_height; y++) {
+            for (int x = 0; x < new_width; x++) {
+                averaging_pixels.clear();
+                for (int i = 0; i < downscale; i++) {
+                    for (int j = 0; j < downscale; j++) {
+                        averaging_pixels.push_back(pixels[y * downscale + i][x * downscale + j]);
+                    }
+                }
+
+                AA_pixels[y][x] = utils::average_color(averaging_pixels);
+            }
+        }
+
+        T_COLOR adjusted_pixels;
+        for (auto& row : AA_pixels) {
+            for (auto& p : row) {
+                adjusted_pixels.push_back(utils::vec_to_color(p));
+            }
+        }
+
+        return adjusted_pixels;
     }
 }

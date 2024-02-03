@@ -1,18 +1,20 @@
 #pragma once
 
+#include <algorithm>
 #include <raylib.h>
 #include "utils.hpp"
 
-
 // For more information:
 // https://en.wikipedia.org/wiki/Phong_reflection_model
+// all of the members are really const
+// but because the operator= is needed they cant be const
 struct _Material {
-    Vector3 albedo;                         // The base color for a material
-    const float ambient_reflection;         // How bright the material is on the ambient side. Basically how bright it overall is
-    const float diffuse_reflection;         // albedo 0 in raytracing series. How noticable the difuse shadows are
-    const float specular_reflection;        // albedo 1 in raytracing series. How noticable the specular highlights are
-    const float specular_exponent;          // How dense the specular highlights are. Higher values -> more dense
-    const float reflective_constant;        // How much the object is like a mirror. 1 is a perfect mirror. 0.5 is a little blurred mirror
+    Vector3 albedo;                   // The base color for a material
+    float ambient_reflection;         // How bright the material is on the ambient side. Basically how bright it overall is
+    float diffuse_reflection;         // albedo 0 in raytracing series. How noticable the difuse shadows are
+    float specular_reflection;        // albedo 1 in raytracing series. How noticable the specular highlights are
+    float specular_exponent;          // How dense the specular highlights are. Higher values -> more dense
+    float scattering_constant;        // How much the object is like a mirror. 1 is a perfect mirror. 0.5 is a little blurred mirror
 };
 
 struct Light {
@@ -22,11 +24,12 @@ struct Light {
 };
 
 struct Sphere {
-    const Vector3 center;
-    const float radius;
-    const _Material material;
+    Vector3 center;
+    float radius;
+    _Material material;
 
     inline Sphere(const Vector3& c, const float& r, const _Material& m) : center(c), radius(r), material(m) { }
+    inline Sphere();
 
     // http://www.lighthouse3d.com/tutorials/maths/ray-sphere-intersection/
     // ray_t is the mulitplier for the direction
