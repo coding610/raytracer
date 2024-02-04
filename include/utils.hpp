@@ -6,8 +6,10 @@
 #include <raylib.h>
 #include <iostream>
 #include <math.h>
+#include <string>
 #include <vector>
 #include <iomanip>
+#include <sys/stat.h>
 #include "defines.hpp"
 
 
@@ -40,6 +42,10 @@ inline void operator /= (Vector3& v1, const float& f) {
     v1.x /= f; v1.y /= f; v1.z /= f;
 }
 
+inline void operator << (std::ostream& stream, Vector3& v) {
+    stream << v.x << " " << v.y << " " << v.z;
+}
+
 
 ////// DEBUG UTILS //////
 template <typename T>
@@ -52,6 +58,26 @@ inline void DEB(const Vector3& m) {
 }
 ////// NAMESPACE UTILS //////
 namespace utils {
+
+    template<typename T>
+    inline std::vector<std::vector<T>> upscale(const std::vector<std::vector<T>>& input, int scale) {
+        std::vector<std::vector<T>> output;
+        for (const auto& row : input) {
+            std::vector<T> upscaledRow;
+            for (const auto& element : row) {
+                for (int i = 0; i < scale; ++i) {
+                    upscaledRow.push_back(element);
+                }
+            } for (int i = 0; i < scale; ++i) output.push_back(upscaledRow);
+        }
+
+        return output;
+    }
+
+    inline bool file_exists(const std::string PATH) {
+          struct stat buffer;   
+          return (stat (PATH.c_str(), &buffer) == 0); 
+    }
 
     inline float dot(const Vector3& v1, const Vector3& v2) {
         return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
@@ -152,9 +178,9 @@ namespace utils {
     // * Anti aliasing (SSAA)
     // * Flatten pixels (2D vector) to a 1D vector
     // * Convert Vector3 to color
-    inline T_COLOR adjust_pixels(const T_PIXEL& pixels, const int& downscale) {
-        int new_width = static_cast<int>(pixels.front().size() / downscale);
-        int new_height = static_cast<int>(pixels.size() / downscale);
+    inline T_COLOR adjust_pixels(const T_PIXEL& pixels, const int& SSAA_downscale) {
+        int new_width = static_cast<int>(pixels.front().size() / SSAA_downscale);
+        int new_height = static_cast<int>(pixels.size() / SSAA_downscale);
         
         T_COLOR adjusted_pixels;
         std::vector<Vector3> averaging_pixels;
@@ -164,9 +190,9 @@ namespace utils {
 
             for (int x = 0; x < new_width; x++) {
                 averaging_pixels.clear();
-                for (int i = 0; i < downscale; i++)
-                    for (int j = 0; j < downscale; j++)
-                        averaging_pixels.push_back(pixels[y * downscale + i][x * downscale + j]);
+                for (int i = 0; i < SSAA_downscale; i++)
+                    for (int j = 0; j < SSAA_downscale; j++)
+                        averaging_pixels.push_back(pixels[y * SSAA_downscale + i][x * SSAA_downscale + j]);
                 adjusted_pixels.push_back(utils::vec_to_color(utils::average_color(averaging_pixels)));
             }
         }
