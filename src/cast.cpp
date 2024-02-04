@@ -120,5 +120,5 @@
         specular_lighting_intensity += hit_sphere->material.specular_reflection * light.specular_component * pow;
     }
 
-    return utils::minmax((diffuse_lighting_intensity + specular_lighting_intensity) * ambient_color + reflect_color);
+    return utils::vecminmax((diffuse_lighting_intensity + specular_lighting_intensity) * ambient_color + reflect_color);
 }

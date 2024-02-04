@@ -16,25 +16,21 @@
 
     T_PIXEL pixels;
     std::vector<Vector3> slice;
-    for (int _y = 0; _y < static_cast<int>(_height / _pixel_spacing); _y++) {
-        utils::progress_bar(_y, static_cast<int>(_height / _pixel_spacing), 50);
+    for (int _y = 0; _y < static_cast<int>(_upsampled_height / _pixel_spacing); _y++) {
+        utils::progress_bar("Rendering scene", _y, static_cast<int>(_upsampled_height / _pixel_spacing) - 1, 50);
         slice.clear();
-        for (int _x = 0; _x < static_cast<int>(_width / _pixel_spacing); _x++) {
-            x =  (2 * (_pixel_spacing * _x) / _width - 1 ) * std::tan(_camera->fov / 2.0) * _width / _height;
-            y = -(2 * (_pixel_spacing * _y) / _height - 1) * std::tan(_camera->fov / 2.0);
+        for (int _x = 0; _x < static_cast<int>(_upsampled_width / _pixel_spacing); _x++) {
+            x =  (2 * (_pixel_spacing * _x) / _upsampled_width - 1 ) * std::tan(_camera->fov / 2.0) * _upsampled_width / _upsampled_height;
+            y = -(2 * (_pixel_spacing * _y) / _upsampled_height - 1) * std::tan(_camera->fov / 2.0);
             slice.push_back(cast_ray({
                 _camera->position,
-                utils::normalize({x, y, -1 / _camera->focal_length}) }, 0
-            ));
+                utils::normalize({x, y, -1 / _camera->focal_length})
+            }, 0 ));
         }
         pixels.push_back(slice);
     }
 
-    DEB(""); // For creating a new line after the progress bar
-
-    std::cout << pixels.size() << "\n";
-
-    T_COLOR adjusted_pixels = utils::adjust_pixels(pixels, _AA_factor);
+    T_COLOR adjusted_pixels = utils::adjust_pixels(pixels, _SSAA_factor);
     return form_texture(adjusted_pixels, _displayed_width / _pixel_spacing, _displayed_height / _pixel_spacing);
 }
 
@@ -67,8 +63,8 @@ void Renderer::render() {
             ClearBackground(BLACK);
             DrawTexturePro(
                 rendered_scene,
-                Rectangle( 0, 0, _width / _pixel_spacing, _height / _pixel_spacing),
-                Rectangle( 0, 0, _width, _height),
+                Rectangle( 0, 0, _upsampled_width / _pixel_spacing, _upsampled_height / _pixel_spacing),
+                Rectangle( 0, 0, _upsampled_width, _upsampled_height),
                 {0, 0}, 0, WHITE
             );
         EndDrawing();
@@ -91,8 +87,9 @@ Renderer::Renderer(
         .max_reflection_depth = 5
     };
 
-    std::srand(static_cast<unsigned>(std::time(NULL)));
     SetTraceLogLevel(LOG_WARNING);
     InitWindow(_displayed_width, _displayed_height, "");
     SetTargetFPS(60);
+
+    std::srand(static_cast<unsigned>(std::time(NULL)));
 }

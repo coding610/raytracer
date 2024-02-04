@@ -19,13 +19,14 @@ private:
 private:
     const std::vector<Light>& _lights;
     const std::vector<Sphere>& _spheres;
-    const float _pixel_spacing = 10;                 // Resolution
+    const float _pixel_spacing = 1;                 // Resolution
 
-    const float _AA_factor = 5;                     // How much to oversample original image. more -> more time and better image
-    const float _width  = _AA_factor * 1000 * 16.0 / 9.0;
-    const float _height = _AA_factor * 1000;
-    const float _displayed_width  = 1000 * 16.0 / 9.0;
+    const float _SSAA_factor = 10;                   // How much to upsample original image. more -> more time and better image
+    const float _displayed_ratio = 16.0 / 9.0;
     const float _displayed_height = 1000;
+    const float _displayed_width  = _displayed_height * _displayed_ratio;
+    const float _upsampled_width  = _SSAA_factor * _displayed_width;
+    const float _upsampled_height = _SSAA_factor * _displayed_height;
 
     _Camera* _camera;
 };

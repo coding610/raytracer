@@ -19,7 +19,7 @@ int main() {
         .diffuse_reflection = 0.01,
         .specular_reflection = 10,
         .specular_exponent = 1425,
-        .scattering_constant = 0.9 // a lil scattering
+        .scattering_constant = 0.3 // a lil scattering
     }; _Material light_metallic_brown = {
         .albedo = {0.6, 0.6, 0.5},
         .ambient_reflection = 1,
