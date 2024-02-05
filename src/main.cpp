@@ -4,6 +4,12 @@
 #include "objects.hpp"
 #include "defines.hpp"
 
+
+// For future me:
+// When rendering images,
+// do it by hand. do not automate it.
+
+
 // https://github.com/ssloy/tinyraytracer/wiki/Part-1:-understandable-raytracing
 int main() {
     _Material mirror = {
@@ -54,4 +60,5 @@ int main() {
 
     Renderer* renderer = new Renderer(spheres, lights);
     renderer->render();
+    delete renderer;
 }

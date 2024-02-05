@@ -99,7 +99,6 @@ void Renderer::render() {
     UnloadTexture(rendered_scene);
 }
 
-
 Renderer::Renderer(
     const std::vector<Sphere>& sphs,
     const std::vector<Light>& lhts
