@@ -147,7 +147,6 @@ namespace utils {
             return (random * range + min);
         }
 
-    ////// DEPENDENT //////
         inline void progress_bar(const std::string& description, const float& value, const float& max_value, const int& bar_length) {
             double percentage = static_cast<double>(value) / max_value;
             int pos = static_cast<int>(bar_length * percentage);
@@ -163,22 +162,7 @@ namespace utils {
             if (value / max_value == 1.0f) std::cout << "\n";
         }
 
-        inline T_PIXEL upscale(const T_PIXEL& input, const int& scale) {
-            T_PIXEL output;
-            std::vector<Vector3> upscaled_row;
-            for (int i = 0; i < input.size(); i++) {
-                // utils::progress_bar(const std::string &description, const float &value, const float &max_value, const int &bar_length)
-                utils::progress_bar("Upscaling", i, input.size() - 1, 50);
-
-                upscaled_row.clear();
-                for (const auto& p : input[i]) {
-                    for (int i = 0; i < scale; i++) upscaled_row.push_back(p);
-                }   for (int i = 0; i < scale; i++) output.push_back(upscaled_row);
-            }
-
-            return output;
-        }
-
+    ////// DEPENDENT //////
         // This function does the following:
         // * Anti aliasing (SSAA)
         // * Flatten pixels (2D vector) to a 1D vector

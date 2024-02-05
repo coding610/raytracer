@@ -35,7 +35,7 @@
     return pixels;
 }
 
-[[nodiscard]] Texture2D Renderer::form_texture(T_COLOR colors, int width, int height) const {
+[[nodiscard]] RenderTexture2D Renderer::form_texture(T_COLOR colors, int width, int height) const {
     Image image;
     image.data = colors.data();
     image.width = static_cast<int>(width);
@@ -43,26 +43,35 @@
     image.mipmaps = 1;
     image.format =  PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
 
-    return LoadTextureFromImage(image);
-}
+    Texture2D texture = LoadTextureFromImage(image);
+    RenderTexture2D target = LoadRenderTexture(texture.width * _pixel_spacing, texture.height * _pixel_spacing);
 
-void Renderer::write_ppm(const std::string& PATH, const T_COLOR& pixels, const int& width, const int& height) const {
-    std::ofstream ofs(PATH + ".ppm");
-    ofs << "P3\n" << width << " " << height << "\n255\n";
-    for (auto& p : pixels) {
-        ofs << static_cast<int>(p.r) << " "
-            << static_cast<int>(p.g) << " "
-            << static_cast<int>(p.b) << "\n";
-    }
-    ofs.close();
+    BeginTextureMode(target);
+        ClearBackground(BLACK);
+        DrawTextureEx(texture, {0, 0}, 0.0f, _pixel_spacing, WHITE);
+    EndTextureMode();
 
-    system(("convert " + PATH + ".ppm " + PATH + ".png").c_str());
-    system(("rm -r " + PATH + ".ppm").c_str());
+    // https://www.reddit.com/r/raylib/comments/14lk8fx/texture_is_rendering_coordinates_with_flipped_y/
+    // Basically, the texture is mirrored because of opengls origo being in the bottom left
+    // The solution is that I render the texture once more with a normal DrawTextureV,
+    // and bada bing bada boom, it works. But thats becuase were basically flipping the image upsidedown twice...
+    RenderTexture2D target_unflipped = LoadRenderTexture(target.texture.width, target.texture.height);
+
+    BeginTextureMode(target_unflipped);
+        ClearBackground(BLACK);
+        DrawTextureV(target.texture, {0, 0}, WHITE);
+    EndTextureMode();
+
+    // Cleanup
+    UnloadTexture(texture);
+    UnloadRenderTexture(target);
+
+    return target_unflipped;
 }
 
 void Renderer::check_image(const std::string PATH) const {
-    if (utils::file_exists(PATH + ".png")) {
-        std::cerr << "Error: Path {" << PATH << ".png" << "} already exists\n";
+    if (utils::file_exists(PATH)) {
+        std::cerr << "Error: Path {" << PATH << "} already exists\n";
         std::exit(0);
     }
 }
@@ -71,11 +80,14 @@ void Renderer::render() {
     if (_write_file) check_image(_FILE_PATH);
 
     T_PIXEL pixels = render_scene();
-    pixels = utils::upscale(pixels, _pixel_spacing);
     T_COLOR colors = utils::adjust_pixels(pixels, _SSAA_factor);
-    Texture2D rendered_scene = form_texture(colors, pixels.front().size() / _SSAA_factor, pixels.size() / _SSAA_factor);
+    Texture2D rendered_scene = form_texture(colors, pixels.front().size() / _SSAA_factor, pixels.size() / _SSAA_factor).texture;
 
-    if (_write_file) write_ppm(_FILE_PATH, colors, pixels.front().size() / _SSAA_factor, pixels.size() / _SSAA_factor);
+    if (_write_file) {
+        Image image = LoadImageFromTexture(rendered_scene);
+        ExportImage(image, _FILE_PATH.c_str());
+        UnloadImage(image);
+    }
 
     while (!WindowShouldClose()) {
         BeginDrawing();
