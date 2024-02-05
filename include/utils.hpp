@@ -1,6 +1,7 @@
 #pragma once
 
 
+#include <algorithm>
 #include <array>
 #include <limits>
 #include <raylib.h>
@@ -58,146 +59,149 @@ inline void DEB(const Vector3& m) {
 }
 ////// NAMESPACE UTILS //////
 namespace utils {
-
-    template<typename T>
-    inline std::vector<std::vector<T>> upscale(const std::vector<std::vector<T>>& input, int scale) {
-        std::vector<std::vector<T>> output;
-        for (const auto& row : input) {
-            std::vector<T> upscaledRow;
-            for (const auto& element : row) {
-                for (int i = 0; i < scale; ++i) {
-                    upscaledRow.push_back(element);
-                }
-            } for (int i = 0; i < scale; ++i) output.push_back(upscaledRow);
+    ////// MATH //////
+        inline float dot(const Vector3& v1, const Vector3& v2) {
+            return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
         }
 
-        return output;
-    }
-
-    inline bool file_exists(const std::string PATH) {
-          struct stat buffer;   
-          return (stat (PATH.c_str(), &buffer) == 0); 
-    }
-
-    inline float dot(const Vector3& v1, const Vector3& v2) {
-        return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
-    }
-
-    inline float length(const Vector3& v) {
-        return std::sqrt(utils::dot(v, v));
-    }
-
-    inline Vector3 project_onto_ray(const Ray& ray, const Vector3& point) {
-        Vector3 line_vector = ray.direction - ray.position;
-        float line_length_squared = utils::dot(line_vector, line_vector);
-        float t = utils::dot(point - ray.position, line_vector) / line_length_squared;
-        return ray.position + t * ray.direction;
-    }
-
-    inline Vector3 normalize(const Vector3& v) {
-        return v / utils::length(v);
-    }
-
-    inline Color vec_to_color(const Vector3& v) {
-        return Color(255 * v.x, 255 * v.y, 255 * v.z, 255);
-    }
-
-    inline Vector3 vecmin(const float& f, const Vector3& v) {
-        Vector3 c = v;
-        c.x = std::min(v.x, f);
-        c.y = std::min(v.y, f);
-        c.z = std::min(v.z, f);
-
-        return c;
-    }
-
-    inline Vector3 vecmax(const float& f, const Vector3& v) {
-        Vector3 c = v;
-        c.x = std::max(v.x, f);
-        c.y = std::max(v.y, f);
-        c.z = std::max(v.z, f);
-
-        return c;
-    }
-
-    inline Vector3 vecminmax(const Vector3& v) {
-        Vector3 c = v;
-        c.x = std::min(std::max(v.x, 0.0f), 1.0f);
-        c.y = std::min(std::max(v.y, 0.0f), 1.0f);
-        c.z = std::min(std::max(v.z, 0.0f), 1.0f);
-
-        return c;
-    }
-
-    // Takes in multiple floats and outputs the smallest one
-    inline float min(const std::vector<float>& mins) {
-        float min_value = std::numeric_limits<float>::max();
-        for (auto& m : mins) min_value = std::min(min_value, m);
-        return min_value;
-    }
-
-    // Takes in multiple floats and outputs the biggest one
-    inline float max(const std::vector<float>& maxs) {
-        float max_value = std::numeric_limits<float>::min();
-        for (auto& m : maxs) max_value = std::max(max_value, m);
-        return max_value;
-    }
-
-    inline Vector3 reflect(const Vector3& light_direction, const Vector3& hit_normal) {
-        return utils::normalize(2 * utils::dot(light_direction, hit_normal) * hit_normal - light_direction);
-    }
-
-    inline void progress_bar(const std::string& description, const float& value, const float& max_value, const int& bar_length) {
-        double percentage = static_cast<double>(value) / max_value;
-        int pos = static_cast<int>(bar_length * percentage);
-
-        std::cout << description << ": [";
-        for (int i = 0; i < bar_length; ++i) {
-            if (i < pos) std::cout << "#";
-            else std::cout << "-";
+        inline float length(const Vector3& v) {
+            return std::sqrt(utils::dot(v, v));
         }
-        std::cout << "] " << std::fixed << std::setprecision(2) << percentage * 100.0 << "%\r";
-        std::cout.flush();
 
-        if (value / max_value == 1.0f) std::cout << "\n";
-    }
+        inline Vector3 project_onto_ray(const Ray& ray, const Vector3& point) {
+            Vector3 line_vector = ray.direction - ray.position;
+            float line_length_squared = utils::dot(line_vector, line_vector);
+            float t = utils::dot(point - ray.position, line_vector) / line_length_squared;
+            return ray.position + t * ray.direction;
+        }
 
-    inline float random_num(const float& min, const float& max) {
-        const double random = ((double) rand() / (RAND_MAX));
-        const double range = max - min;
-        return (random * range + min);
-    }
+        inline Vector3 normalize(const Vector3& v) {
+            return v / utils::length(v);
+        }
 
-    inline Vector3 average_color(const std::vector<Vector3>& pixels) {
-        Vector3 clr = {0, 0, 0};
-        for (auto& p : pixels) clr += p / pixels.size();
-        return clr;
-    }
+    ////// VECTOR //////
+        inline Color vec_to_color(const Vector3& v) {
+            return Color(255 * v.x, 255 * v.y, 255 * v.z, 255);
+        }
 
-    // This function does the following:
-    // * Anti aliasing (SSAA)
-    // * Flatten pixels (2D vector) to a 1D vector
-    // * Convert Vector3 to color
-    inline T_COLOR adjust_pixels(const T_PIXEL& pixels, const int& SSAA_downscale) {
-        int new_width = static_cast<int>(pixels.front().size() / SSAA_downscale);
-        int new_height = static_cast<int>(pixels.size() / SSAA_downscale);
-        
-        T_COLOR adjusted_pixels;
-        std::vector<Vector3> averaging_pixels;
+        inline Vector3 vecmin(const float& f, const Vector3& v) {
+            Vector3 c = v;
+            c.x = std::min(v.x, f);
+            c.y = std::min(v.y, f);
+            c.z = std::min(v.z, f);
 
-        for (int y = 0; y < new_height; y++) {
-            utils::progress_bar("Anti Aliasing  ", y, new_height - 1, 50);
+            return c;
+        }
 
-            for (int x = 0; x < new_width; x++) {
-                averaging_pixels.clear();
-                for (int i = 0; i < SSAA_downscale; i++)
-                    for (int j = 0; j < SSAA_downscale; j++)
-                        averaging_pixels.push_back(pixels[y * SSAA_downscale + i][x * SSAA_downscale + j]);
-                adjusted_pixels.push_back(utils::vec_to_color(utils::average_color(averaging_pixels)));
+        inline Vector3 vecmax(const float& f, const Vector3& v) {
+            Vector3 c = v;
+            c.x = std::max(v.x, f);
+            c.y = std::max(v.y, f);
+            c.z = std::max(v.z, f);
+
+            return c;
+        }
+
+        inline Vector3 vecminmax(const Vector3& v) {
+            Vector3 c = v;
+            c.x = std::min(std::max(v.x, 0.0f), 1.0f);
+            c.y = std::min(std::max(v.y, 0.0f), 1.0f);
+            c.z = std::min(std::max(v.z, 0.0f), 1.0f);
+
+            return c;
+        }
+
+        // Takes in multiple floats and outputs the smallest one
+        inline float min(const std::vector<float>& mins) {
+            float min_value = std::numeric_limits<float>::max();
+            for (auto& m : mins) min_value = std::min(min_value, m);
+            return min_value;
+        }
+
+        // Takes in multiple floats and outputs the biggest one
+        inline float max(const std::vector<float>& maxs) {
+            float max_value = std::numeric_limits<float>::min();
+            for (auto& m : maxs) max_value = std::max(max_value, m);
+            return max_value;
+        }
+
+        inline Vector3 reflect(const Vector3& light_direction, const Vector3& hit_normal) {
+            return utils::normalize(2 * utils::dot(light_direction, hit_normal) * hit_normal - light_direction);
+        }
+
+        inline Vector3 average_color(const std::vector<Vector3>& pixels) {
+            Vector3 clr = {0, 0, 0};
+            for (auto& p : pixels) clr += p / pixels.size();
+            return clr;
+        }
+
+    ////// OTHER //////
+        inline bool file_exists(const std::string PATH) {
+              struct stat buffer;   
+              return (stat (PATH.c_str(), &buffer) == 0); 
+        }
+
+        inline float random_num(const float& min, const float& max) {
+            const double random = ((double) rand() / (RAND_MAX));
+            const double range = max - min;
+            return (random * range + min);
+        }
+
+    ////// DEPENDENT //////
+        inline void progress_bar(const std::string& description, const float& value, const float& max_value, const int& bar_length) {
+            double percentage = static_cast<double>(value) / max_value;
+            int pos = static_cast<int>(bar_length * percentage);
+
+            std::cout << description << ": [";
+            for (int i = 0; i < bar_length; ++i) {
+                if (i < pos) std::cout << "#";
+                else std::cout << "-";
             }
+            std::cout << "] " << std::fixed << std::setprecision(2) << percentage * 100.0 << "%\r";
+            std::cout.flush();
+
+            if (value / max_value == 1.0f) std::cout << "\n";
         }
 
-        return adjusted_pixels;
-    }
+        inline T_PIXEL upscale(const T_PIXEL& input, const int& scale) {
+            T_PIXEL output;
+            std::vector<Vector3> upscaled_row;
+            for (int i = 0; i < input.size(); i++) {
+                // utils::progress_bar(const std::string &description, const float &value, const float &max_value, const int &bar_length)
+                utils::progress_bar("Upscaling", i, input.size() - 1, 50);
 
+                upscaled_row.clear();
+                for (const auto& p : input[i]) {
+                    for (int i = 0; i < scale; i++) upscaled_row.push_back(p);
+                }   for (int i = 0; i < scale; i++) output.push_back(upscaled_row);
+            }
+
+            return output;
+        }
+
+        // This function does the following:
+        // * Anti aliasing (SSAA)
+        // * Flatten pixels (2D vector) to a 1D vector
+        // * Convert Vector3 to color
+        inline T_COLOR adjust_pixels(const T_PIXEL& pixels, const int& SSAA_downscale) {
+            int new_width = static_cast<int>(pixels.front().size() / SSAA_downscale);
+            int new_height = static_cast<int>(pixels.size() / SSAA_downscale);
+            
+            T_COLOR adjusted_pixels;
+            std::vector<Vector3> averaging_pixels;
+
+            for (int y = 0; y < new_height; y++) {
+                utils::progress_bar("Anti Aliasing  ", y, new_height - 1, 50);
+
+                for (int x = 0; x < new_width; x++) {
+                    averaging_pixels.clear();
+                    for (int i = 0; i < SSAA_downscale; i++)
+                        for (int j = 0; j < SSAA_downscale; j++)
+                            averaging_pixels.push_back(pixels[y * SSAA_downscale + i][x * SSAA_downscale + j]);
+                    adjusted_pixels.push_back(utils::vec_to_color(utils::average_color(averaging_pixels)));
+                }
+            }
+
+            return adjusted_pixels;
+        }
 }

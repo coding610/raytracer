@@ -46,36 +46,36 @@
     return LoadTextureFromImage(image);
 }
 
-void Renderer::write_ppm(const std::string PATH, const T_PIXEL& pixels) const {
-    std::ofstream ofs(PATH);
-    ofs << "P3\n" << _displayed_width << " " << _displayed_height << "\n1\n";
-    for (auto& row : pixels) {
-        for (auto& p : row) {
-            ofs << static_cast<int>(p.x) << " "
-                << static_cast<int>(p.y) << " "
-                << static_cast<int>(p.z) << "\n";
-        }
+void Renderer::write_ppm(const std::string& PATH, const T_COLOR& pixels, const int& width, const int& height) const {
+    std::ofstream ofs(PATH + ".ppm");
+    ofs << "P3\n" << width << " " << height << "\n255\n";
+    for (auto& p : pixels) {
+        ofs << static_cast<int>(p.r) << " "
+            << static_cast<int>(p.g) << " "
+            << static_cast<int>(p.b) << "\n";
     }
     ofs.close();
+
+    system(("convert " + PATH + ".ppm " + PATH + ".png").c_str());
+    system(("rm -r " + PATH + ".ppm").c_str());
 }
 
-void Renderer::check_ppm(const std::string PATH) const {
-    if (utils::file_exists(PATH)) { // ERROR
-        std::cerr << "FATAL ERROR: Path {" << PATH << "} already exists\n";
+void Renderer::check_image(const std::string PATH) const {
+    if (utils::file_exists(PATH + ".png")) {
+        std::cerr << "Error: Path {" << PATH << ".png" << "} already exists\n";
         std::exit(0);
     }
 }
 
 void Renderer::render() {
-    const std::string FILE_PATH = "history/image0.ppm";
-    check_ppm(FILE_PATH);
+    if (_write_file) check_image(_FILE_PATH);
 
     T_PIXEL pixels = render_scene();
     pixels = utils::upscale(pixels, _pixel_spacing);
     T_COLOR colors = utils::adjust_pixels(pixels, _SSAA_factor);
     Texture2D rendered_scene = form_texture(colors, pixels.front().size() / _SSAA_factor, pixels.size() / _SSAA_factor);
 
-    write_ppm("history/image0.ppm", pixels);
+    if (_write_file) write_ppm(_FILE_PATH, colors, pixels.front().size() / _SSAA_factor, pixels.size() / _SSAA_factor);
 
     while (!WindowShouldClose()) {
         BeginDrawing();
