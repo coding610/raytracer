@@ -47,7 +47,4 @@
         {{9, -7.5, -18.0    },          6,      scratched_mirror         },
     };
 
-    Renderer* renderer = new Renderer(spheres, lights);
-    renderer->render();
-
 '''
