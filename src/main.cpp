@@ -1,13 +1,8 @@
 #include <cstdint>
 #include <vector>
-#include "render.hpp"
+#include "manager.hpp"
 #include "objects.hpp"
 #include "defines.hpp"
-
-
-// For future me:
-// When rendering images,
-// do it by hand. do not automate it.
 
 
 // https://github.com/ssloy/tinyraytracer/wiki/Part-1:-understandable-raytracing
@@ -58,7 +53,7 @@ int main() {
         {{9, -7.5, -18.0    },          6,      scratched_mirror         },
     };
 
-    Renderer* renderer = new Renderer(spheres, lights);
+    RayTracingManager* renderer = new RayTracingManager(spheres, lights);
     renderer->render();
     delete renderer;
 }
