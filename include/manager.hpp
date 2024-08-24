@@ -23,7 +23,7 @@ private:
     const std::vector<Sphere>& _spheres;
 
     float _pixel_spacing = 1;                // Basically resolution of image
-    float _SSAA_factor = 25;                  // How much to upsample original image. more -> more time and better image
+    float _SSAA_factor = 5;                  // How much to upsample original image. more -> more time and better image
     const float _displayed_ratio = 16.0 / 9.0;
     const int   _displayed_height = 1000;
     const int   _displayed_width  = _displayed_height * _displayed_ratio;
@@ -31,7 +31,7 @@ private:
     const float _upsampled_height = _SSAA_factor * _displayed_height / _pixel_spacing;
 
     const std::string _FILE_PATH = "imgs/25aa.png";
-    const bool _write_file = true;
+    const bool _write_file = false;
 
     _Camera* _camera;
 };
